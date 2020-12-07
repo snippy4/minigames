@@ -10,12 +10,12 @@ class game:
         self.snake = [[20,20], [20,19], [20,18]]
         self.running = True
         self.direction = (0, 1)
-        self.apclock = time.perf_counter()
         self.movclock = time.perf_counter()
 
     def play(self):
         pygame.init()
         starttime = time.perf_counter()
+        self.grid[random.randint(0, 26)][random.randint(0, 47)] = 1
         while self.running:
             self.draw()
             self.round()
@@ -46,10 +46,6 @@ class game:
         pygame.display.flip()
 
     def round(self):
-        if time.perf_counter() - self.apclock > 5:
-            self.grid[random.randint(0, 26)][random.randint(0, 47)] = 1
-            self.apclock = time.perf_counter()
-        
         if time.perf_counter() - self.movclock > 0.1:
             temp = self.snake[0]
             temp2 = None
@@ -79,10 +75,9 @@ class game:
                 newdirectionx = self.snake[len(self.snake) - 2][0] - self.snake[len(self.snake) - 1][0]
                 newdirectiony = self.snake[len(self.snake) - 2][1] - self.snake[len(self.snake) - 1][1]
                 self.snake.append([self.snake[len(self.snake) - 1][0] + newdirectionx, self.snake[len(self.snake) - 1][1] + newdirectiony])
+                self.grid[random.randint(0, 26)][random.randint(0, 47)] = 1
         except(Exception):
             pass
-            
-        
 
 if __name__ == "__main__":
     pygame.init()
