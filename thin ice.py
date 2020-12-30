@@ -8,8 +8,11 @@ class game:
         self.playerpos = (24, 16)
         self.grid = [[-1] * 48 for i in range(27)]
         self.levels = {}
+        self.wallsprite = pygame.image.load('sprites/thin ice wall.png')
+        self.pufflesprite = pygame.image.load('sprites/thin ice puffle.png')
 
     def play(self):
+        self.loadlevel()
         while self.running:
             self.draw()
             self.round()
@@ -19,6 +22,7 @@ class game:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.running = False
+                    # yes this is badly made
                     if event.key == pygame.K_w:
                         if self.grid[self.playerpos[1] - 1][self.playerpos[0]] == 99:
                             continue
@@ -52,13 +56,13 @@ class game:
                 elif tile == 1:
                     pygame.draw.rect(self.screen, (217, 241, 255), (x * 40, y * 40, 40, 40))
                 elif tile == 99:
-                    pygame.draw.rect(self.screen, (41, 162, 250), (x * 40, y * 40, 40, 40))
+                    self.screen.blit(self.wallsprite, (x * 40, y * 40))
                 elif tile == 2:
                     pygame.draw.rect(self.screen, (200, 200, 250), (x * 40, y * 40, 40, 40))
                 x += 1
             x = 0
             y += 1
-        pygame.draw.rect(self.screen, (255, 0, 0), (self.playerpos[0] * 40, self.playerpos[1] * 40, 40, 40))
+        self.screen.blit(self.pufflesprite, (self.playerpos[0] * 40, self.playerpos[1] * 40, 40, 40))
         pygame.display.flip()
     
     def round(self):
@@ -85,6 +89,14 @@ class game:
                         self.play()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     self.grid[int(event.pos[1] / 40)][int(event.pos[0] / 40)] = activeblock
+        pygame.quit()
+        levelname = input()
+        with open(f'{levelname}.lvl', 'a') as f:
+            f.write(json.dumps(self.grid))
+        
+    def loadlevel(self):
+        with open('test lvl.lvl', 'r') as f:
+            self.grid = json.loads(f.read())
 
 
 
@@ -93,4 +105,4 @@ if __name__ == "__main__":
     screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
     pygame.display.toggle_fullscreen()
     Game = game(screen)
-    Game.levelmaker()
+    Game.play()
