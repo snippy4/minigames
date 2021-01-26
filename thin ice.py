@@ -7,12 +7,13 @@ class game:
         self.background = (115, 205, 255)
         self.playerpos = (24, 16)
         self.grid = [[-1] * 48 for i in range(27)]
-        self.levels = {}
+        self.currentlevel = 0
         self.wallsprite = pygame.image.load('sprites/thin ice wall.png')
         self.pufflesprite = pygame.image.load('sprites/thin ice puffle.png')
+        self.TILESIZE = 40
 
     def play(self):
-        self.loadlevel()
+        self.loadlevel(self.currentlevel)
         while self.running:
             self.draw()
             self.round()
@@ -52,25 +53,31 @@ class game:
         for row in self.grid:
             for tile in row:
                 if tile == 0:
-                    pygame.draw.rect(self.screen, self.background, (x * 40, y * 40, 40, 40))
+                    pygame.draw.rect(self.screen, self.background, (x * self.TILESIZE, y * self.TILESIZE, self.TILESIZE, self.TILESIZE))
                 elif tile == 1:
-                    pygame.draw.rect(self.screen, (217, 241, 255), (x * 40, y * 40, 40, 40))
+                    pygame.draw.rect(self.screen, (217, 241, 255), (x * self.TILESIZE, y * self.TILESIZE, self.TILESIZE, self.TILESIZE))
                 elif tile == 99:
-                    self.screen.blit(self.wallsprite, (x * 40, y * 40))
+                    self.screen.blit(self.wallsprite, (x * self.TILESIZE, y * self.TILESIZE))
                 elif tile == 2:
-                    pygame.draw.rect(self.screen, (200, 200, 250), (x * 40, y * 40, 40, 40))
+                    pygame.draw.rect(self.screen, (200, 200, 250), (x * self.TILESIZE, y * self.TILESIZE, self.TILESIZE, self.TILESIZE))
+                elif tile == 101:
+                    pygame.draw.rect(self.screen, (255, 0, 0), (x * self.TILESIZE, y * self.TILESIZE, self.TILESIZE, self.TILESIZE))
                 x += 1
             x = 0
             y += 1
-        self.screen.blit(self.pufflesprite, (self.playerpos[0] * 40, self.playerpos[1] * 40, 40, 40))
+        self.screen.blit(self.pufflesprite, (self.playerpos[0] * self.TILESIZE, self.playerpos[1] * self.TILESIZE, self.TILESIZE, self.TILESIZE))
         pygame.display.flip()
     
     def round(self):
         if self.grid[self.playerpos[1]][self.playerpos[0]] == 0:
             self.running = False
+        elif self.grid[self.playerpos[1]][self.playerpos[0]] == 101:
+            self.currentlevel += 1
+            self.loadlevel(self.currentlevel)
 
     def levelmaker(self):
         activeblock = None
+        playerset = False
         while self.running:
             self.draw()
             for event in pygame.event.get():
@@ -85,19 +92,33 @@ class game:
                         activeblock = 2
                     elif event.key == pygame.K_0:
                         activeblock = 99
+                    elif event.key == pygame.K_MINUS:
+                        activeblock = 101
+                    elif event.key == pygame.K_EQUALS:
+                        activeblock = 1
+                        playerset = True
+                    elif event.key == pygame.K_z:
+                        activeblock = -1
                     elif event.key == pygame.K_p:
                         self.play()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    self.grid[int(event.pos[1] / 40)][int(event.pos[0] / 40)] = activeblock
+                    self.grid[int(event.pos[1] / self.TILESIZE)][int(event.pos[0] / self.TILESIZE)] = activeblock
+                    if playerset:
+                        self.playerpos = (int(event.pos[0] / self.TILESIZE),int(event.pos[1] / self.TILESIZE))
+                        playerset = False
+                        print(self.playerpos)
         pygame.quit()
         levelname = input()
         with open(f'{levelname}.lvl', 'a') as f:
+            f.truncate(0)
+            f.write(f'{json.dumps(self.playerpos)}\n')
             f.write(json.dumps(self.grid))
         
-    def loadlevel(self):
-        with open('test lvl.lvl', 'r') as f:
-            self.grid = json.loads(f.read())
-
+    def loadlevel(self, currentlevel):
+        with open(f'{currentlevel}.lvl', 'r') as f:
+            parts = f.read().split('\n')
+            self.playerpos = json.loads((parts[0]))
+            self.grid = json.loads(parts[1])
 
 
 if __name__ == "__main__":
